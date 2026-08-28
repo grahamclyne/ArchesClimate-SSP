@@ -1,0 +1,67 @@
+project: cmip-interpolation  # wandb/checkpoint namespace: model_output/<project>/<name>
+surface_variables: ['tas','psl','pr','uas','vas','ps','net_flux','evspsbl']  # single-level surface fields predicted (channel order matters)
+depth_variables: ['thetao']  # ocean 'lev' fields predicted, stacked over depth_levels
+level_variables: ["hus", "ta", "ua", "va", "zg"]  # atmospheric fields predicted, stacked over pressure_levels
+pressure_levels: [100000.,  92500.,  85000.,  70000.,  60000.,  50000.,  40000.,  30000., 25000.,  20000.,  15000.,  10000.,   7000.,   5000.,   3000.,   2000.,1000.]  # pressure levels (Pa) level_variables are stacked on
+depth_levels: [0.50576,3.8562799,8.092519,13.991038,22.757616,35.740204,53.850636,77.61116,108.03028, 147.40625,]  # ocean depth levels (m) depth_variables are stacked on
+norm_scheme: new_ozone  # suffix of the stats/cmip_stats_<name>.pt normalization file to use
+train_filter: ['piControl','historical','ssp119','ssp126','ssp245','ssp370','ssp460']  # CMIP6 experiments included in the training split
+test_filter: ['ssp585']  # CMIP6 experiment(s) used for the held-out test split
+val_filter: ['ssp434']  # CMIP6 experiment(s) used for the validation split
+spatial_forcing_variables: ['methane','carbon','nitrous','load_ASNO3M','load_CSNO3M','load_CINO3M','load_SO4','load_AIBCM','load_ASBCM','ozone_0','ozone_1','ozone_2','ozone_3','ozone_4','ozone_5','ozone_6','ozone_7','ozone_8','ozone_9','ozone_10']  # 2-D forcing channels (GHGs, aerosols, ozone bands) fed to the model
+non_spatial_forcing_variables: []  # scalar (non-gridded) forcing channels, e.g. solar/SSI bands
+dataset_path: memmap_filled_in  # memmap directory (under cluster.data_path) this config reads training data from
+lead_times: [1]  # candidate lead times (months) sampled between input and target state
+
+# copy of deterministic_damip_pf4_energy_score_w050_80_10_no1pct.yaml with the
+# DAMIP single-forcing jobs (hist-GHG, hist-aer, hist-stratO3) also removed
+# from train_filter; everything else identical.
+module:  # Lightning module class and its training hyperparameters
+  _target_: ArchesClimate.model.forecast.ForecastModuleWithCond  # Hydra target class to instantiate
+  name: ${name}  # run name, interpolated from the CLI's name= override
+  cond_dim: 512  # dimensionality of the per-token conditioning embedding
+  lr: 1e-4  # base learning rate (unused when optimizer_name selects muon_lr/adamw_lr instead)
+  betas: [0.9, 0.98]  # Adam(W) momentum coefficients
+  weight_decay: 0.05  # AdamW/Muon weight decay
+  num_warmup_steps: 5000  # linear LR warmup steps before the schedule proper starts
+  num_training_steps: ${max_steps}  # total scheduled training steps, interpolated from max_steps
+  load_prev: 1  # number of previous timesteps concatenated as model input
+  conditional: prev+forcings  # what the model conditions on, e.g. 'prev+forcings' or 'prev+det+forcings'
+  uncond_proba: 0.0  # probability of dropping all conditioning during training (classifier-free-guidance style)
+  forcing_drop_p: 0.10  # per-channel probability of randomly dropping an individual forcing during training
+  forcing_all_present_prob: 0.80  # probability every forcing channel is present (no dropout) for a given sample
+  forcing_dropout_groups: [[3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]]  # spatial_forcing_variables indices dropped together as one group (e.g. all ozone bands)
+  optimizer_name: muon  # optimizer used for the backbone ('muon' or 'adamw')
+  muon_lr: 2e-4  # learning rate for Muon-optimized parameters
+  adamw_lr: 5e-5  # learning rate for AdamW-optimized (non-Muon) parameters
+  lambda_pf: 0.2  # weight of the multi-step pushforward loss term
+  pf_warmup_steps: 16000  # training steps before the pushforward loss starts contributing
+  ema_decay: 0.999  # exponential moving average decay rate for the EMA weight copy
+  pf_n_steps: 4  # number of pushforward rollout steps taken during training
+  use_energy_score: True  # train with the energy-score (CRPS-style ensemble) loss instead of plain MSE
+  n_energy_score_members: 3  # ensemble members drawn per sample for the energy-score loss
+  pf_n_energy_score_members: 2  # ensemble members drawn per pushforward step (kept low to avoid OOM)
+  variogram_weight: 0.5  # weight of the variogram (spatial-structure) term in the energy-score loss
+  variogram_auto_scale: True  # auto-scale the variogram term to match the energy-score term's magnitude
+  variogram_anneal_steps: 5000  # steps over which the variogram term is annealed in
+backbone:  # spatial network architecture
+  _target_: ArchesClimate.backbones.archesweather.ArchesWeatherCondBackbone  # Hydra target class to instantiate
+  tensor_size: [1,72,72]  # patch-embedded (level, lat, lon) tensor size the backbone operates on
+  emb_dim: 384  # internal embedding dimension (must match across backbone/embedder)
+  cond_dim: 512  # dimensionality of the per-token conditioning embedding
+  window_size: [1, 6, 10]  # windowed-attention window size (level, lat, lon), in patches
+  droppath_coeff: 0.2  # stochastic depth (DropPath) rate
+  dropout: 0  # attention/MLP dropout rate
+  depth_multiplier: 2  # attention blocks per stage, relative to the base depth
+  use_skip: True  # concatenate the first stage's output as a skip connection into the last stage
+  first_interaction_layer: False  # add an extra linear mixing layer before the first attention stage
+  axis_attn: False  # use axis-factorized attention instead of full windowed attention
+  mlp_layer: swiglu  # MLP block type used inside each attention block
+  mlp_ratio: 4.0  # MLP hidden-dimension ratio relative to emb_dim
+embedder:  # patch encoder/decoder wrapping the backbone
+  _target_: ArchesClimate.model.cmip_encoder_decoder.CMIPEncodeDecodeLayer  # Hydra target class to instantiate
+  img_size: [216,144,144]  # (channels, lat, lon) shape the encoder/decoder expects (channels set at instantiate() time)
+  emb_dim: 384  # internal embedding dimension (must match across backbone/embedder)
+  out_emb_dim: 768  # decoder output embedding dim (2x emb_dim when use_skip concatenates the skip connection)
+  patch_size: [2, 2, 2]  # (level, lat, lon) patch size for the initial patch embedding
+  n_concatenated_states: 2  # states concatenated as encoder input (e.g. previous + predicted)

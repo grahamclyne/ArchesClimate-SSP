@@ -1,0 +1,62 @@
+documentation:
+  title: Download and regrid CMIP6 variables into one memmap
+  description: Download variables from CanESM5, regrid to CanESM5's own native 2.8125x2.8125 grid (atmosphere vars pass through unchanged; only thetao is actually regridded), and convert to tensordict memmap
+  authors:
+    - butchart_neal
+
+# NOTE: IPSL used 2 piControl members; CanESM5 only publishes 1 member (r1i1p1f1)
+# with the full required variable set, so this only has 1.
+datasets:
+
+  - project: CMIP6
+    dataset: CanESM5
+    exp: piControl
+    ensemble: r1i1p1f1
+    grid: 'gn'
+    # CanESM5 piControl publishes model years 5201-6200 (spin-up clock), not
+    # calendar years; align the requested range with what's actually on ESGF.
+    # Only pulling 150 years (5201-5350) rather than the full 1000-year run.
+    start_year: 5201
+    end_year: 5350
+
+preprocessors:
+  process_var:
+    regrid:
+      target_grid: "2.8125x2.8125"
+      scheme: area_weighted
+diagnostics:
+  regrid_and_combine:
+    variables:
+      #surface
+      tas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      psl:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      pr:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      uas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      vas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      ps:      {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #ocean
+      thetao:  {mip: Omon, frequency: mon, preprocessor: process_var}
+
+      #fluxes
+      hfss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      hfls:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      huss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      evspsbl: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #atmospheric
+      hus: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ta:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      ua:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      va:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      zg:  {mip: Amon, frequency: mon, preprocessor: process_var}
+
+    scripts:
+      my_diagnostic:
+        script: /lustre/fswork/projects/rech/mlr/udy16au/ArchesClimate/ArchesClimate/preprocessing/prepare_interpol_dataset_canesm5.py
+
+# to run:  esmvaltool run interpolation_dataset_canesm5_piControl.yml --search_esgf=when_missing

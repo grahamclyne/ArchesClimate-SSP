@@ -1,0 +1,38 @@
+# DAMIP idealized-experiment-attribution ablation (sec:damip_ablation):
+# deterministic_damip_pf4_energy_score_w050 (train_filter includes
+# hist-GHG/hist-aer/hist-stratO3 DAMIP runs + 1pctCO2) vs.
+# deterministic_damip_pf4_energy_score_w050_no_damip (same architecture,
+# DAMIP runs excluded from train_filter, 1pctCO2 kept) -- see the two module
+# configs' diff for the exact difference. Both at their available
+# checkpoints (038000 / 022000 respectively), single seed each, SSP4-3.4 (val).
+config_module: deterministic_damip_pf4_energy_score_w050
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_434_all.nc
+    models:
+      damip:
+        label: "$AC_{+DAMIP}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      no_damip:
+        label: "$AC_{\\neg DAMIP}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_no_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_damip_ablation_table

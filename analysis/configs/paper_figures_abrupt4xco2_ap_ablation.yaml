@@ -1,0 +1,44 @@
+# Abrupt-4xCO2 global-mean tas rollout for the pf4 energy-score
+# forcing-all-present-probability ablation family (ap000/ap040/w050_0
+# default/w050_100_20), all on one plot with the IPSL target -- replaces the
+# single-model fig:abrupt4xco2 (abrupt4xco2_tas_pr_comparison.py) with a
+# multi-model comparison, using analysis/paper_figures_ap_global_mean.py.
+config_module: deterministic_damip_pf4_energy_score_w050
+dataloader: cmip_random_lead_times
+
+variable: tas
+target_label: "IPSL target"
+xaxis_start: 1
+xlabel: "Rollout year"
+
+scenarios:
+  - key: "abrupt"
+    label: "Abrupt-4xCO2"
+    target:
+      realization: r2i1p1f1
+      scenario: abrupt-4xCO2
+    models:
+      ap000:
+        label: "$AC_{p_{all}=0.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap000_12_10_1_1020_1_abrupt_0_step-step=022000.ckpt_ema
+      ap020:
+        label: "$AC_{p_{all}=0.2}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap020_12_10_1_1020_1_abrupt_0_step-step=022000.ckpt_ema
+      ap040:
+        label: "$AC_{p_{all}=0.4}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap040_12_10_1_1020_1_abrupt_0_step-step=022000.ckpt_ema
+      ap060:
+        label: "$AC_{p_{all}=0.6}$ (default)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_abrupt_0_step-step=022000.ckpt_ema
+      ap100:
+        label: "$AC_{p_{all}=1.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_100_20_12_10_1_1020_1_abrupt_0_step-step=022000.ckpt_ema
+
+max_years: 86
+
+output_name: paper_figures_abrupt4xco2_ap_ablation

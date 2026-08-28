@@ -1,0 +1,31 @@
+# Template for running outside the author's own clusters (cleps/jean-zay) --
+# copy this file, fill in data_root below, and pass `cluster=<your copy>`.
+# Every other cluster config in this directory (cleps*, jean_zay*, local) is
+# the author's own machine, hardcoded to their own paths -- not a template.
+
+# The one thing to set. Point it at the same directory you passed as
+# --local-dir to `hf download gclyne/ArchesClimate-data` (see README.md's
+# Quickstart step 3) -- everything below derives from it. Write out the real
+# absolute path here, not a shell variable -- this file isn't shell-evaluated.
+data_root: REPLACE_ME
+
+# Where downloaded/generated physical data lives (memmaps, static/, stats/).
+data_path: ${cluster.data_root}/
+# Scratch space for intermediate/generated outputs (e.g. analysis/long_rollout.py's
+# generated_data/) and where checkpoints/model_output land. Same as data_path
+# here since there's no reason to split them for a single-machine setup --
+# override independently if you do want the split.
+work_path: ${cluster.data_root}/
+output_path: ${cluster.data_root}/
+wandb_dir: ${cluster.data_root}/model_output/
+
+wandb_mode: offline
+use_custom_requeue: False
+batch_size: 1
+precision: 16-mixed
+gpus: 1
+cpus: 0
+
+# No `launcher:` block -- that's only read by submit.py's submitit/SLURM path.
+# Running without SLURM means invoking main_hydra.py directly instead of
+# submit.py; see TRAINING.md's "Running without SLURM" section.

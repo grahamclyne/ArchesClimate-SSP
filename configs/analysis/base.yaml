@@ -1,0 +1,52 @@
+experiment: 'flow_avg_2_24_50_1_118_1_test_0'
+# experiments_to_plot: ['flow_net_flux_1_75_10_1_118_test_0',
+#                    'flow_net_flux_1_75_10_1.05_118_test_0',
+#                    'flow_net_flux_1_75_10_1.08_118_test_0',
+#                    'flow_net_flux_1_75_10_1.1_118_test_0',
+#                    'flow_net_flux_1_75_10_1.2_118_test_0',
+#                    'flow_net_flux_1_75_10_1.25_118_test_0',
+#                   ]
+
+# experiments_to_plot: ['flow_net_flux_mean_only_0_50_10_1.05_118_1_test_0','flow_net_flux_mean_only_0_50_10_1.08_118_1_test_0','flow_net_flux_mean_only_0_50_10_1.1_118_1_test_0','flow_net_flux_mean_only_0_50_10_1.2_118_1_test_0']
+# experiments_to_plot: ['flow_net_flux_mean_only_0_50_50_1_118_1_test_0','flow_net_flux_mean_only_0_50_10_1_118_3_test_0','flow_net_flux_mean_only_0_50_10_1_118_0_test_0','flow_net_flux_mean_only_0_50_10_1_118_5_test_0','flow_net_flux_mean_only_0_50_10_1_118_10_test_0']
+
+
+#cf guidance 
+# experiments_to_plot: ['flow_net_flux_mean_only_0_50_50_1_118_1_test_0','flow_net_flux_mean_only_0_50_10_1_118_1.3_test_0','flow_net_flux_mean_only_0_50_10_1_118_1.5_test_0','flow_net_flux_mean_only_0_50_10_1_118_1.8_test_0']
+experiments_to_plot: ['flow_avg_2_24_50_1_118_1_test_0']
+# experiments_to_plot: ['flow_net_flux_mean_only_0_25_10_1_118_1_test_0','flow_net_flux_mean_only_0_50_50_1_118_1_test_0','flow_net_flux_mean_only_0_100_10_1_118_1_test_0','flow_net_flux_mean_only_0_150_10_1_118_1_test_0','flow_net_flux_mean_only_0_200_10_1_118_1_test_0']
+experiment_names: ['1.25','1.15','1.1','1.05','1','0.9']
+experiment_legend_title: 'noise scale'
+# experiments: ['flow_net_flux_1_50_50_1_118_1']
+num_members: 10
+num_rollout_steps: 118
+start_lat: 0
+end_lat: None
+start_lon: 0 
+end_lon: None
+
+# experiments: [['flow_net_flux_1_75_10_1_118','mean_only_spatial_norm']]
+
+
+
+    #MODEL COMP
+    # experiments = [['ddpm_epsilon_updated_0_55_40_1.05_120','mean_only_spatial_norm'],
+    #              #  ['ddim_epsilon_updated_0_55_40_1.05_120','mean_only_spatial_norm'],
+    #                 ['ddpm_state_updated_0_55_40_1.05_120','mean_only_spatial_norm'],
+    #                ['flow_no_spatial_std_0_100_50_1.08_118','mean_only_spatial_norm']
+    #               ]
+    # targets = [['test',0]]
+
+    
+    #INFERENCE STEPS COMP
+    # experiments = [['flow_no_spatial_std_0_25_10_1_118','mean_only_spatial_norm'],
+    #                ['flow_no_spatial_std_0_75_10_1_118','mean_only_spatial_norm'],
+    #                ['flow_no_spatial_std_0_100_10_1_118','mean_only_spatial_norm'],
+    #                ['flow_no_spatial_std_0_150_10_1_118','mean_only_spatial_norm'],
+    #               ]
+    # targets = [['test',0]]    
+
+    # experiments = [['flow_net_flux_1_100_10_1_118','mean_only_spatial_norm']]
+    # targets = [['test',0]]
+    # experiments = [['flow_ocean_temp_3_76_40_1.15_118','mean_only_spatial_norm']]
+    # targets = [['val',10]]

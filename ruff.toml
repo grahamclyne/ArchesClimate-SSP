@@ -1,0 +1,46 @@
+line-length = 100
+extend-exclude = ["model/diffusion copy.py"]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "D",   # pydocstyle (Google convention)
+    "UP",  # pyupgrade
+]
+ignore = [
+    "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
+    "D107", # Missing docstring in __init__
+    "N999", # Package name ArchesClimate uses project naming convention
+    "N812", # import X as Y aliases are common ML conventions (L, F, TF)
+    "N806", # Uppercase variables (M2, Rd, X, Y) are standard in climate/ML science
+    "N803", # Uppercase args (M, N, C, Lat, Lon) are standard in physics formulas
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.isort]
+known-first-party = ["ArchesClimate"]
+
+[lint.per-file-ignores]
+"*.ipynb" = ["E402", "E501", "E701", "E741", "E999", "F811", "F821", "D", "N", "I001"]
+"model/custom_scheduler.py" = ["F821"]
+# Scripts that execute at module level need E402 suppressed
+"utils/generate_stats.py" = ["E402", "D"]
+"utils/generate_stats_mvp.py" = ["E402", "D"]
+"preprocessing/prepare_interpol_dataset.py" = ["E402"]
+# One-off scratch analysis scripts: exploratory, print-and-plot style,
+# imports interleaved with logic deliberately, no docstrings expected.
+"analysis/_scratch_*.py" = ["E402", "E501", "D"]
+"analysis/scratch_*.py" = ["E402", "E501", "D"]
+# Preprocessing scripts
+"preprocessing/*.py" = ["D"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

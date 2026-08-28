@@ -1,0 +1,100 @@
+# Config for analysis/paper_figures_polar_regional.py (and the rest of the
+# paper_figures_*.py suite via paper_figures_generate_all.py).
+#
+# Compares the polar-dynamics intervention runs against each other and
+# against IPSL: 3 deterministic (flatloss/spherepad/flatpf) + 3 flow
+# (flatloss/halfloss/amploss), tas only, ssp434 (val) and ssp585 (test,
+# surface-only -- fine, tas is a surface variable).
+config_module: deterministic_damip_pf8
+
+variable: tas
+final_decade_years: 10
+polar_window_months: 120
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    models:
+      det_normal:
+        label: "Det normal"
+        runs:
+          - deterministic_damip_pf8_fixed_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      det_flatloss:
+        label: "Det flatloss"
+        runs:
+          - deterministic_damip_pf8_flatloss_12_10_1_1020_1_val_0_step-step=030000.ckpt_ema_clamp3std10
+      det_spherepad:
+        label: "Det spherepad"
+        runs:
+          - deterministic_damip_pf8_spherepad_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      det_flatpf:
+        label: "Det flatpf"
+        runs:
+          - deterministic_damip_pf8_flatpf_12_10_1_1020_1_val_0_step-step=030000.ckpt_ema_clamp3std10
+      flow_flatloss:
+        label: "Flow flatloss"
+        runs:
+          - flow_damip_pf8_flatloss_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_halfloss:
+        label: "Flow halfloss"
+        runs:
+          - flow_damip_pf8_halfloss_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_amploss:
+        label: "Flow amploss"
+        runs:
+          - flow_damip_pf8_amploss_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_normal:
+        label: "Flow normal"
+        runs:
+          - flow_damip_pf8_fixed_v2_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp585
+    models:
+      det_normal:
+        label: "Det normal"
+        runs:
+          - deterministic_damip_pf8_fixed_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      det_flatloss:
+        label: "Det flatloss"
+        runs:
+          - deterministic_damip_pf8_flatloss_12_10_1_1020_1_test_0_step-step=030000.ckpt_ema_clamp3std10
+      det_spherepad:
+        label: "Det spherepad"
+        runs:
+          - deterministic_damip_pf8_spherepad_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      det_flatpf:
+        label: "Det flatpf"
+        runs:
+          - deterministic_damip_pf8_flatpf_12_10_1_1020_1_test_0_step-step=030000.ckpt_ema_clamp3std10
+      flow_flatloss:
+        label: "Flow flatloss"
+        runs:
+          - flow_damip_pf8_flatloss_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_halfloss:
+        label: "Flow halfloss"
+        runs:
+          - flow_damip_pf8_halfloss_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_amploss:
+        label: "Flow amploss"
+        runs:
+          - flow_damip_pf8_amploss_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema_clamp3std10
+      flow_normal:
+        label: "Flow normal"
+        runs:
+          - flow_damip_pf8_fixed_v2_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+
+output_name: paper_figures_polar_comparison

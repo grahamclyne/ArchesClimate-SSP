@@ -1,0 +1,40 @@
+# Appendix version of paper_figures_flow_vs_deterministic_lt1_12_forced_response.yaml:
+# same flow vs. deterministic_damip_pf8_fixed comparison, but restricted to
+# the "_pi" (held-at-piControl) single-forcing ablations only (drops the
+# null-token variants) and rendered with larger fonts for the paper
+# appendix.
+#
+# flow_damip_pf8_lt1_12's rollout output was accidentally deleted from
+# scratch (2026-08-12); flow_damip_pf8_fixed_v2 is the current flow-model
+# checkpoint standing in for it. deterministic_damip_pf8_fixed's checkpoint
+# is *also* gone (same date) -- flow_damip_pf8_fixed_v2's own frozen
+# deterministic backbone (load_deterministic_model in
+# configs/module/flow_damip_pf8.yaml) was pointed at
+# deterministic_damip_pf4_fixed instead for the reload, and
+# deterministic_damip_pf4_fixed stands in here too. The two panels are at
+# different checkpoint steps/clamp settings, not matched like the original
+# lt1_12 comparison was: flow_damip_pf8_fixed_v2 at step-040000, unclamped
+# (its existing, already-complete baseline + ablation set, reused rather
+# than regenerated); deterministic_damip_pf4_fixed at step-022000 (its only
+# available checkpoint), clamped -- clamp baked directly into this entry's
+# dir name rather than the shared clamp_suffix field below, since the two
+# models don't share a clamp setting here. Both use the
+# _PI_SUFFIX_OVERRIDES "ipsl" "No ozone" -> 9-19 (11 channels) convention
+# already baked into paper_figures_forced_response.py -- same channel range
+# flow_damip_pf8_fixed_v2's own "No ozone (pi)" ablation already uses, so
+# both panels' ozone curves are directly comparable.
+config_module: deterministic_damip_pf8
+
+forced_response:
+  start_year: 2015
+  clamp_suffix: ""
+  physical_reference: true
+  pi_only: true
+  label_fontsize: 22
+  tick_fontsize: 18
+  legend_fontsize: 16
+  models:
+    flow_damip_pf8_fixed_v2: flow_damip_pf8_fixed_v2_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema
+    deterministic_damip_pf4_fixed: deterministic_damip_pf4_fixed_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+
+output_name: paper_figures_flow_vs_deterministic_lt1_12_pi_only

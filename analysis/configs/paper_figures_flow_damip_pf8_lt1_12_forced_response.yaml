@@ -1,0 +1,15 @@
+# Forcing-ablation forced-response plot for the flow_damip_pf8_lt1_12 model
+# (module=flow_damip_pf8, name=flow_damip_pf8_lt1_12, ckpt
+# step-step=022000.ckpt, module.lead_times=[1,12]). Ablations available on
+# disk: No CO2/methane/N2O (single-forcing zs1/zs0/zs2), No aerosol (zs3-8),
+# No ozone (zs9-19).
+config_module: flow_damip_pf8
+
+forced_response:
+  start_year: 2015
+  clamp_suffix: "_clamp3std10"
+  physical_reference: true
+  models:
+    flow_damip_pf8_lt1_12: flow_damip_pf8_lt1_12_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_flow_damip_pf8_lt1_12

@@ -1,0 +1,30 @@
+dataset: 
+  _target_: ArchesClimate.dataloaders.cmip_random_lead_time.CMIPForecastLeadTime
+  path: ${cluster.data_path}${module.dataset_path}
+  forcings_path: ${cluster.data_path}/reference_data/
+  lead_times: ${module.lead_times}
+  load_prev: ${module.module.load_prev}
+  limit_examples: ${limit_examples}
+  norm_scheme: ${module.norm_scheme}
+  multistep: 1
+  surface_variables: ${module.surface_variables}
+  level_variables: ${module.level_variables}
+  pressure_levels: ${module.pressure_levels}
+  depth_levels: ${module.depth_levels}
+
+  train_filter: ${module.train_filter}
+  test_filter: ${module.test_filter}
+  val_filter: ${module.val_filter}
+  spatial_forcing_variables: ${module.spatial_forcing_variables}
+  non_spatial_forcing_variables: ${module.non_spatial_forcing_variables}
+  # oc.select default (8) matches the dataloader's old hardcoded pf_n_steps,
+  # for the ~13 module configs that never set module.module.pf_n_steps
+  # explicitly (they rely on ForecastModuleWithCond's own pf_n_steps=4 default).
+  pf_n_steps: ${oc.select:module.module.pf_n_steps,8}
+  # Skip the pf_future_states/has_pf build (8 extra memmap reads/clones per
+  # sample) for modules that never consume pushforward targets -- only
+  # ForecastModuleWithCond's training_step reads them. Set per-module via a
+  # top-level `skip_pf: true` in that module's config (e.g. DCPPDiffusion
+  # configs), not inside module.module (which is unpacked as instantiate()
+  # kwargs and would error).
+  skip_pf: ${oc.select:module.skip_pf,false}

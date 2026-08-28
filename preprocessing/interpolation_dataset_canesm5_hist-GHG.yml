@@ -1,0 +1,148 @@
+documentation:
+  title: Download and regrid CMIP6 variables into one memmap
+  description: Download variables from CanESM5, regrid to CanESM5's own native 2.8125x2.8125 grid (atmosphere vars pass through unchanged; only thetao is actually regridded), and convert to tensordict memmap
+  authors:
+    - butchart_neal
+
+datasets:
+
+  # DAMIP single-forcing historical run, CanESM5 counterpart of
+  # interpolation_dataset_hist-GHG.yml (IPSL-CM6A-LR). Verified against ESGF
+  # (esgf-node.llnl.gov/esg-search): CanESM5 contributes r1i1p1f1..r10i1p1f1
+  # (physics p1; later realizations also exist as p2, not used here), each
+  # 1850-01 to 2014-12+ with tas/psl/pr/uas/vas/ps/thetao/hfss/hfls/huss/
+  # rlds/rsds/rsus/rlus/evspsbl/hus/ta/ua/va/zg present. Truncated to
+  # 1850-2014 (165y) to match common/forcings.py's HIST_SINGLE_FORCING_YEARS
+  # -- see its docstring for why. Single grid_label 'gn' for both realms
+  # (unlike IPSL, which splits gr/gn and needs a wildcard).
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r1i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r2i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r3i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r4i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r5i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r6i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r7i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r8i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r9i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+  - project: CMIP6
+    activity: DAMIP
+    dataset: CanESM5
+    exp: hist-GHG
+    ensemble: r10i1p1f1
+    grid: 'gn'
+    start_year: 1850
+    end_year: 2014
+
+preprocessors:
+  process_var:
+    regrid:
+      target_grid: "2.8125x2.8125"
+      scheme: area_weighted
+diagnostics:
+  regrid_and_combine:
+    variables:
+      #surface
+      tas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      psl:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      pr:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      uas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      vas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      ps:      {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #ocean
+      thetao:  {mip: Omon, frequency: mon, preprocessor: process_var}
+
+      #fluxes
+      hfss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      hfls:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      huss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      evspsbl: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #atmospheric
+      hus: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ta:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      ua:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      va:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      zg:  {mip: Amon, frequency: mon, preprocessor: process_var}
+
+    scripts:
+      my_diagnostic:
+        script: /lustre/fswork/projects/rech/mlr/udy16au/ArchesClimate/ArchesClimate/preprocessing/prepare_interpol_dataset_canesm5.py
+
+# to run:  esmvaltool run interpolation_dataset_canesm5_hist-GHG.yml --search_esgf=when_missing

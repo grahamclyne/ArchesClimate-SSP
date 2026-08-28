@@ -1,0 +1,99 @@
+# Forcing-all-present-probability ablation comparison (sec:architecture_ablations,
+# "Forcing All-Present Probability" block of tab:architecture_ablations /
+# tab:architecture_ablations_585): deterministic_damip_pf8_ap{000,020,040,080,100}
+# (forcing_all_present_prob in {0.0, 0.2, 0.4, 0.8, 1.0}), at step-022000
+# checkpoints. Unlike the other architecture ablations, these five ap* runs were
+# submitted under their bare module-config name (no "_fixed" run-name suffix).
+#
+# IMPORTANT: deterministic_damip_pf8.yaml's own forcing_all_present_prob is
+# 0.60, NOT 0.8 (confirmed via `grep forcing_all_present_prob` on the module
+# configs) -- despite the paper text elsewhere calling 0.8 "the default".
+# deterministic_damip_pf8_fixed (used as the "default" row everywhere else in
+# this table, e.g. Concat+SPADE and pf=8) is therefore the p_all=0.6 point of
+# this sweep, not p_all=0.8. ap080 has its own, separately-trained checkpoint
+# and rollout and is included here as its own (non-default) 0.8 row.
+config_module: deterministic_damip_pf8
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_434_all.nc
+    models:
+      ap000:
+        label: "$AC_{p_{all}=0.0}$"
+        runs:
+          - deterministic_damip_pf8_ap000_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      ap020:
+        label: "$AC_{p_{all}=0.2}$"
+        runs:
+          - deterministic_damip_pf8_ap020_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      ap040:
+        label: "$AC_{p_{all}=0.4}$"
+        runs:
+          - deterministic_damip_pf8_ap040_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      ap060:
+        label: "$AC_{p_{all}=0.6}$ (default)"
+        runs:
+          - deterministic_damip_pf8_fixed_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      ap080:
+        label: "$AC_{p_{all}=0.8}$"
+        runs:
+          - deterministic_damip_pf8_ap080_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+      ap100:
+        label: "$AC_{p_{all}=1.0}$"
+        runs:
+          - deterministic_damip_pf8_ap100_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema_clamp3std10
+
+  # inference.target=test rollouts (debug=True, surface-only) -- no
+  # rollout_lev_*.pt/rollout_level_*.pt, so ocean_rmse_plot.py/physical.py/
+  # whisker_plots.py will fail for this scenario; paper_figures_generate_all.py
+  # tolerates that and continues. Included so table.py/rmse_plot.py get a 585
+  # row and paper_figures_585_analysis.py's extrapolation check runs. No
+  # MESMER-M emulation exists for ssp585 (unseen forcing pathway), so no
+  # `mesmer` key here.
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp585
+    models:
+      ap000:
+        label: "$AC_{p_{all}=0.0}$"
+        runs:
+          - deterministic_damip_pf8_ap000_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap020:
+        label: "$AC_{p_{all}=0.2}$"
+        runs:
+          - deterministic_damip_pf8_ap020_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap040:
+        label: "$AC_{p_{all}=0.4}$"
+        runs:
+          - deterministic_damip_pf8_ap040_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap060:
+        label: "$AC_{p_{all}=0.6}$ (default)"
+        runs:
+          - deterministic_damip_pf8_fixed_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap080:
+        label: "$AC_{p_{all}=0.8}$"
+        runs:
+          - deterministic_damip_pf8_ap080_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap100:
+        label: "$AC_{p_{all}=1.0}$"
+        runs:
+          - deterministic_damip_pf8_ap100_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+
+output_name: paper_figures_ap_ablations

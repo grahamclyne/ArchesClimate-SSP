@@ -1,0 +1,94 @@
+# Full paper_figures_generate_all.py run for the four IPSL-DAMIP model
+# variants requested: the pf4 pushforward-length model and the three
+# spatial-forcing backbone ablations (adaln1d/concat/spade), all _damip.
+#
+# Data availability check (2026-07-30): all four models (pf4_damip,
+# ablation_adaln1d_damip, ablation_concat_damip, ablation_spade_damip) now
+# have generated_data/ rollouts for val_0 + test_0 (adaln1d generated this
+# session via analysis/long_rollout.sh to match).
+#
+# IMPORTANT: none of the four have rollout_level_*.pt/rollout_lev_*.pt --
+# these are all ForecastModuleWithCond (not DCPPDiffusion) models, and
+# ForecastModule.generate_rollouts gates level/lev saving on
+# inference.save_all_vars (default False), not inference.debug (see
+# model/forecast.py's generate_rollouts docstring vs. DCPPDiffusion's, which
+# uses debug). All four val_0 rollouts were generated with debug=False but
+# save_all_vars left at its default, so they're surface-only regardless.
+# That means ocean_rmse_plot.py/physical.py/whisker_plots.py cannot produce
+# anything for any of these four models until the val rollouts are
+# regenerated with inference.save_all_vars=True. table.py/rmse_plot.py
+# (surface-only) and 585_analysis work fine as-is.
+#
+# pf4_damip has no val3_0 rollout (mirrors paper_figures_table_pf_ablations.yaml),
+# so this config only declares 434 + 585 (no 534), meaning
+# global_mean/hovmoller are skipped (need both 434 and 534) -- same
+# limitation as the pf_ablations config.
+config_module: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_concat_damip
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_434_all.nc
+    models:
+      pf4:
+        label: "$AC_{pf4}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf4_no_uncond_grouped_dropout_pilot_full_state_circular_pad_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      adaln1d:
+        label: "$AC_{linear}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_adaln1d_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      concat:
+        label: "$AC_{shared}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_concat_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      spade:
+        label: "$AC_{spade}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_spade_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+  # inference.target=test rollouts (debug=True, surface-only) -- no
+  # rollout_lev_*.pt/rollout_level_*.pt, so ocean_rmse_plot.py/physical.py/
+  # whisker_plots.py will fail for this scenario; paper_figures_generate_all.py
+  # tolerates that and continues. Included so table.py/rmse_plot.py get a 585
+  # row and paper_figures_585_analysis.py's extrapolation check runs. No
+  # MESMER-M emulation exists for ssp585 (unseen forcing pathway), so no
+  # `mesmer` key here.
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp585
+    models:
+      pf4:
+        label: "$AC_{pf4}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf4_no_uncond_grouped_dropout_pilot_full_state_circular_pad_damip_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema
+      adaln1d:
+        label: "$AC_{linear}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_adaln1d_damip_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema
+      concat:
+        label: "$AC_{shared}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_concat_damip_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema
+      spade:
+        label: "$AC_{spade}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_spade_damip_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_ablations_damip

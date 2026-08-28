@@ -1,0 +1,65 @@
+# Forcing-all-present-probability ablation, pf4 energy-score family (the
+# family actually selected as the paper's default, see sec:architecture_ablations
+# "Multi-step Finetuning": pf=4 chosen over the nominal pf=8 default).
+# Replaces the pf8-based stats in tab:architecture_ablations' "Forcing
+# All-Present Probability" block with the matching pf4 runs at step-022000
+# (ap000/ap040) or the corresponding pf4 default/100_20 checkpoints.
+config_module: deterministic_damip_pf4_energy_score_w050
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_434_all.nc
+    models:
+      ap000:
+        label: "$AC_{p_{all}=0.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap000_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      ap020:
+        label: "$AC_{p_{all}=0.2}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap020_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      ap040:
+        label: "$AC_{p_{all}=0.4}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap040_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      ap060:
+        label: "$AC_{p_{all}=0.6}$ (default)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_val_0_step-step=038000.ckpt_ema
+      ap060_step22000:
+        label: "$AC_{p_{all}=0.6}$ (step-22000)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      ap080:
+        label: "$AC_{p_{all}=0.8}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema_5members
+      ap080_step22000:
+        label: "$AC_{p_{all}=0.8}$ (step-22000)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      ap100:
+        label: "$AC_{p_{all}=1.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_100_20_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema
+      ap100_step22000:
+        label: "$AC_{p_{all}=1.0}$ (step-22000)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_100_20_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_ap_ablations_pf4

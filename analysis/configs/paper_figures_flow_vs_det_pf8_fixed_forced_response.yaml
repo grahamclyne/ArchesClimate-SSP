@@ -1,0 +1,18 @@
+# Forcing-ablation forced-response plot, flow vs. deterministic, side by
+# side in one figure: flow_damip_pf8_fixed_v2 (module=flow_damip_pf8,
+# step-022000) vs. deterministic_damip_pf8_fixed (module=deterministic_damip_pf8,
+# step-022000), both EMA, both with the black-carbon clamp
+# (clamp_spatial_forcing_indices=[3], std=10). Same single-gas piControl-held
+# ablations (No CO2/methane/N2O/aerosol/ozone) available for both on disk.
+config_module: deterministic_damip_pf8
+
+forced_response:
+  start_year: 2015
+  clamp_suffix: "_clamp3std10"
+  pi_only: true
+  physical_reference: true
+  models:
+    flow_damip_pf8_fixed_v2: flow_damip_pf8_fixed_v2_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    deterministic_damip_pf8_fixed: deterministic_damip_pf8_fixed_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_flow_vs_det_pf8_fixed_forced_response

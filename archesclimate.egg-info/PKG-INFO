@@ -1,0 +1,104 @@
+Metadata-Version: 2.4
+Name: archesclimate
+Version: 0.1.0
+Summary: ArchesClimate-SSP: a Swin-Transformer-based autoregressive climate emulator for CMIP6 SSP scenarios.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: torch>=2.3
+Requires-Dist: lightning>=2.5
+Requires-Dist: hydra-core>=1.3
+Requires-Dist: omegaconf>=2.3
+Requires-Dist: tensordict>=0.9
+Requires-Dist: timm>=1.0
+Requires-Dist: torchmetrics>=1.4
+Requires-Dist: diffusers>=0.30
+Requires-Dist: submitit>=1.5
+Requires-Dist: huggingface_hub>=0.24
+Requires-Dist: wandb>=0.17
+Requires-Dist: xarray>=2024.1
+Requires-Dist: numpy>=1.26
+Requires-Dist: pandas>=2.1
+Requires-Dist: scipy>=1.11
+Requires-Dist: cftime>=1.6
+Requires-Dist: matplotlib>=3.8
+Requires-Dist: seaborn>=0.13
+Requires-Dist: tqdm>=4.66
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: lovely-tensors>=0.1
+Requires-Dist: lovely-numpy>=0.2
+Provides-Extra: axial
+Requires-Dist: axial-attention>=0.6; extra == "axial"
+
+# ArchesClimate-SSP
+
+ArchesClimate-SSP (AC-SSP) is a deep-learning climate emulator based on [ArchesWeather](https://www.science.org/doi/10.1126/sciadv.adx2372) trained to reproduce IPSL-CM6A-LR / CanESM5 monthly climate states under CMIP6 SSP scenarios. We condition AC-SSP on external forcings (GHGs, aerosols, ozone) given a scenario's forcing trajectory. With these forcings and two initial-condition months, AC-SSP generates autoregressively the rest of the scenario, orders of magnitude cheaper than
+running the full Earth System Model (producing a subset of the variables).
+
+This is the code for the paper
+[**"Towards Emulating the Forced Response of Climate Models with Generative Machine Learning"**](https://arxiv.org/abs/2605.16929).
+It's a long-ago fork of [geoarches](https://github.com/INRIA/geoarches), the toolkit behind 
+[ArchesWeather](https://www.science.org/doi/10.1126/sciadv.adx2372).
+
+![Annual-mean tas map, AC-SSP vs. IPSL-CM6A-LR, SSP4-3.4](assets/tas_rollout_map.gif)
+
+*Annual-mean surface air temperature (tas), AC-SSP vs. the IPSL-CM6A-LR target it's conditioned to reproduce, SSP4-3.4*
+
+![Global-mean tas timeseries, AC-SSP vs. IPSL-CM6A-LR, SSP4-3.4/SSP5-3.4-over/SSP5-8.5](assets/tas_rollout_timeseries.gif)
+
+*Rollouts across three scenarios (SSP5-3.4 starts at 2040) as a lat-weighted global-mean timeseries (solid: AC-SSP, dashed: IPSL). Regenerate both GIFs with `python -m analysis.make_readme_gif`.*
+
+## Quickstart
+
+### 1. Install
+
+Requires Python >=3.11 and [uv](https://docs.astral.sh/uv/). From a clone of this repo:
+
+```bash
+uv sync
+```
+
+This installs the repo itself as an editable package (`ArchesClimate`, see `pyproject.toml`). The preprocessing pipeline has its own, separate `esmvaltool` environment (not part of this uv install, it was much easier to keep these separate), see `preprocessing/DOWNLOADING.md`.
+
+### 2. Get model weights and data
+
+Model weights and data are available on two Hugging Face repos: **[`gclyne/ArchesClimate`](https://huggingface.co/gclyne/ArchesClimate)**
+(model weights) and **[`gclyne/ArchesClimate-data`](https://huggingface.co/datasets/gclyne/ArchesClimate-data)**
+(everything physical: initial conditions, forcing trajectories, orography, normalization stats).
+Three trained checkpoints are published: `archesclimate-ssp-deterministic` (IPSL-grid, single
+free-running prediction per step), `archesclimate-ssp-energy-score` (IPSL-grid, energy-score-trained,
+supports a stochastic ensemble), and `archesclimate-ssp-canesm5-energy-score` (CanESM5-native-grid,
+energy-score-trained). To download the models and data, run these commands:
+
+```bash
+huggingface-cli download gclyne/ArchesClimate --local-dir <model_dir>
+huggingface-cli download gclyne/ArchesClimate-data --local-dir <data_dir>
+```
+
+`<data_dir>` should end up holding `stats/cmip_stats_new_ozone.pt`, `static/orography.pt`
+(+ `static/orography_canesm5_native.pt` for the CanESM5-grid checkpoint), and per-scenario
+`scenarios/<realization>_<experiment>.pt` files (IC + full forcing trajectory together,
+currently published for `ssp434`, `ssp534-over`, `ssp585`). `<model_dir>` holds each checkpoint's
+`config.yaml` + `step-step=NNNNNN.ckpt`.
+
+**The download alone is not enough to run a checkpoint.** The `cmip_stats_*.pt` file is loaded
+at runtime as a package resource under `<repo>/stats/` — not from `<data_dir>`, wherever you
+chose to put that. Copy or symlink it over:
+
+```bash
+ln -s "$(realpath <data_dir>/stats/cmip_stats_new_ozone.pt)" stats/cmip_stats_new_ozone.pt
+```
+
+See [`INFERENCE.md`](INFERENCE.md) §3 for why, and for every other required input.
+
+Each published checkpoint has a matching `configs/module/<repo-subdir-name>.yaml` in this repo
+(e.g. `configs/module/archesclimate-ssp-deterministic.yaml`), so `module=` can just reuse the
+Hugging Face subdirectory name directly rather than needing the internal training-run config
+name -- see [`INFERENCE.md`](INFERENCE.md) for the full rollout command.
+
+
+
+Everything here is driven by [Hydra](https://hydra.cc/): a run is a composition of config
+groups (`module`, `cluster`, `dataloader`, `inference`) under `configs/`, overridden on
+the command line. 
+See  [`TRAINING.md`](TRAINING.md) for how to train your own model. 
+See [`INFERENCE.md`](INFERENCE.md) for how to run inference with a model. 

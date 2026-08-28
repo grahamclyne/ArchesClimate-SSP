@@ -1,0 +1,120 @@
+project: cmip-interpolation  # wandb/checkpoint namespace: model_output/<project>/<name>
+surface_variables: ['tas','psl','pr','uas','vas','ps','net_flux','evspsbl']  # single-level surface fields predicted (channel order matters)
+depth_variables: ['thetao']  # ocean 'lev' fields predicted, stacked over depth_levels
+level_variables: ["hus", "ta", "ua", "va", "zg"]  # atmospheric fields predicted, stacked over pressure_levels
+pressure_levels: [100000.,  92500.,  85000.,  70000.,  60000.,  50000.,  40000.,  30000., 25000.,  20000.,  15000.,  10000.,   7000.,   5000.,   3000.,   2000.,1000.]  # pressure levels (Pa) level_variables are stacked on
+depth_levels: [0.50576,3.8562799,8.092519,13.991038,22.757616,35.740204,53.850636,77.61116,108.03028, 147.40625,]  # ocean depth levels (m) depth_variables are stacked on
+norm_scheme: new_ozone_canesm5_native  # suffix of the stats/cmip_stats_<name>.pt normalization file to use
+train_filter: ['piControl','historical','ssp119','ssp126','ssp245','ssp370','ssp460']  # CMIP6 experiments included in the training split
+test_filter: ['ssp585']  # CMIP6 experiment(s) used for the held-out test split
+val_filter: ['ssp434']  # CMIP6 experiment(s) used for the validation split
+spatial_forcing_variables: ['methane','carbon','nitrous','ozone_0','ozone_1','ozone_2','ozone_3','ozone_4','ozone_5','ozone_6','ozone_7','ozone_8','ozone_9','ozone_10']  # 2-D forcing channels (GHGs, aerosols, ozone bands) fed to the model
+non_spatial_forcing_variables: ['ssi_0','ssi_1','ssi_2','ssi_3','ssi_4','ssi_5']  # scalar (non-gridded) forcing channels, e.g. solar/SSI bands
+dataset_path: memmap_filled_in_canesm5_native  # memmap directory (under cluster.data_path) this config reads training data from
+lead_times: [1]  # candidate lead times (months) sampled between input and target state
+lat_dim: 64  # grid height in pixels, overriding the 144-row IPSL default (native CanESM5 grid)
+lon_dim: 128  # grid width in pixels, overriding the 144-col IPSL default (native CanESM5 grid)
+
+# Native-grid counterpart of
+# forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_canesm5_damip.yaml
+# -- that config regrids CanESM5 (native 2.8125deg, 64x128) up onto IPSL's
+# finer 1.25x2.5deg (144x144) grid via ESMValCore's area_weighted scheme,
+# which duplicates rows near the poles because 2.8125/1.25=2.25 is not an
+# integer ratio (see preprocessing/interpolation_dataset_canesm5_*.yml,
+# now regridding to CanESM5's own 2.8125x2.8125 native grid instead).
+# This config trains directly on that native 64x128 grid instead, so
+# lat_dim/lon_dim override the 144x144 default read in
+# model/base_climate_module.py's prep_model() (also threaded through
+# model/forecast.py, model/diffusion.py, model/cmip_encoder_decoder.py).
+# tensor_size and img_size below are derived the same way as the 144x144
+# config's [1,72,72]/[*,144,144] (patch_size [2,2,2] -> divide by 2), just
+# for 64x128 instead.
+#
+# window_size is [1,8,16], not [1,6,10] like the 72x72 parent: 72 isn't
+# divisible by 6 or 10 either, but get_pad3d (backbones/weatherlearn_utils/
+# pad.py) silently zero-pads both lat and lon up to the next window-size
+# multiple, and that padded band sits right at the poles for this grid --
+# rollout diagnostics (analysis/initial_analysis.ipynb) showed a visible
+# blocky/tiled bias pattern there. 32/8=4 and 64/16=4 exactly, so no padding
+# is inserted at all. [1,8,16] isn't an exact scalar multiple of [1,6,10]
+# (32 and 64 have no divisor in a 3:5 ratio -- both are powers of 2), but
+# 8:16 (1:2) is the closest even divisor pair to 6:10 (3:5).
+#
+# Unlike the 144x144 parent, this config drops hist-aer and the 6 aerosol
+# load_* spatial_forcing_variables outright (not as a separate diagnostic
+# no_aerosol variant, as at 144x144) -- aerosol forcing isn't used for the
+# native-grid model at all, since hist-aer was never fully downloaded for
+# CanESM5 (only stale/incomplete ESMValTool preproc dirs exist under
+# $SCRATCH/interpolation_dataset_canesm5_hist-aer_*, no final memmap in
+# interpolation_canesm5_datasets). forcing_dropout_groups below is adjusted
+# accordingly (single ozone-only group at indices 3-13, no aerosol group --
+# mirrors the 144x144 no_aerosol variant's forcing_dropout_groups).
+#
+# Uses real orography here (144x144's orography.pt regridded to 64x128 via
+# preprocessing/regrid_reference_forcings_canesm5_native.py, adaptive-avg-pool
+# downsample -- same approach already used there for GHG/aerosol/ozone).
+# Needs dataloader=cmip_random_lead_times_canesm5_native (not the default
+# cmip_random_lead_times) so forcings_path points at the regridded copy under
+# reference_data_canesm5_native/, not the 144x144 reference_data/ whose
+# orography.pt is the wrong grid shape. NOTE: this predates orography being
+# hardcoded on for every model -- back when it was a toggle, flipping it
+# changed n_spatial_forcing (see base_climate_module.py's n_sf comment), so
+# the earlier orography-less runs of this config are not checkpoint-compatible
+# with this one -- requires training from scratch, not a warmstart.
+#
+# Checked the rollout bias that motivated this against actual elevation:
+# Antarctica (highest orography, ~2750m, and by far the coldest -- 231K mean
+# vs 261K at the other pole, confirmed against the target memmap directly)
+# already had the *smallest* bias (~-1K) even without orography, while
+# this change is unlikely to fix that specific bias -- it's kept because
+# giving the model real elevation is still more physically correct, and may
+# help other variables/regions. The -15K pole bias looks like a separate,
+# still-open issue (possibly the lack of latitude wraparound -- circular_pad
+# only wraps longitude -- or a genuine modeling gap at that edge).
+#
+# norm_scheme (new_ozone_canesm5_native) is generated by
+# utils/generate_stats_canesm5_native.sh against dataset_path below.
+module:  # Lightning module class and its training hyperparameters
+  _target_: ArchesClimate.model.forecast.ForecastModuleWithCond  # Hydra target class to instantiate
+  name: ${name}  # run name, interpolated from the CLI's name= override
+  cond_dim: 512  # dimensionality of the per-token conditioning embedding
+  lr: 1e-4  # base learning rate (unused when optimizer_name selects muon_lr/adamw_lr instead)
+  betas: [0.9, 0.98]  # Adam(W) momentum coefficients
+  weight_decay: 0.05  # AdamW/Muon weight decay
+  num_warmup_steps: 5000  # linear LR warmup steps before the schedule proper starts
+  num_training_steps: ${max_steps}  # total scheduled training steps, interpolated from max_steps
+  load_prev: 1  # number of previous timesteps concatenated as model input
+  conditional: prev+forcings  # what the model conditions on, e.g. 'prev+forcings' or 'prev+det+forcings'
+  uncond_proba: 0.0  # probability of dropping all conditioning during training (classifier-free-guidance style)
+  forcing_drop_p: 0.20  # per-channel probability of randomly dropping an individual forcing during training
+  forcing_all_present_prob: 0.60  # probability every forcing channel is present (no dropout) for a given sample
+  forcing_dropout_groups: [[3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]]  # spatial_forcing_variables indices dropped together as one group (e.g. all ozone bands)
+  optimizer_name: muon  # optimizer used for the backbone ('muon' or 'adamw')
+  muon_lr: 2e-4  # learning rate for Muon-optimized parameters
+  adamw_lr: 5e-5  # learning rate for AdamW-optimized (non-Muon) parameters
+  lambda_pf: 0.2  # weight of the multi-step pushforward loss term
+  pf_warmup_steps: 16000  # training steps before the pushforward loss starts contributing
+  ema_decay: 0.999  # exponential moving average decay rate for the EMA weight copy
+  pf_n_steps: 8  # number of pushforward rollout steps taken during training
+backbone:  # spatial network architecture
+  # same as the 144x144 default backbone, resized for the 64x128 native grid
+  _target_: ArchesClimate.backbones.archesweather.ArchesWeatherCondBackbone  # Hydra target class to instantiate
+  tensor_size: [1,32,64] # after embed: 64/patch_size[1]=32, 128/patch_size[2]=64
+  emb_dim: 384  # internal embedding dimension (must match across backbone/embedder)
+  cond_dim: 512  # dimensionality of the per-token conditioning embedding
+  window_size: [1, 8, 16]  # windowed-attention window size (level, lat, lon), in patches
+  droppath_coeff: 0.2  # stochastic depth (DropPath) rate
+  dropout: 0  # attention/MLP dropout rate
+  depth_multiplier: 2  # attention blocks per stage, relative to the base depth
+  use_skip: True  # concatenate the first stage's output as a skip connection into the last stage
+  first_interaction_layer: False  # add an extra linear mixing layer before the first attention stage
+  axis_attn: False  # use axis-factorized attention instead of full windowed attention
+  mlp_layer: swiglu  # MLP block type used inside each attention block
+  mlp_ratio: 4.0  # MLP hidden-dimension ratio relative to emb_dim
+embedder:  # patch encoder/decoder wrapping the backbone
+  _target_: ArchesClimate.model.cmip_encoder_decoder.CMIPEncodeDecodeLayer  # Hydra target class to instantiate
+  img_size: [216,64,128] # placeholder -- surface_ch/lat_dim/lon_dim are actually passed in from base_climate_module.py's prep_model() at instantiate() time
+  emb_dim: 384  # internal embedding dimension (must match across backbone/embedder)
+  out_emb_dim: 768 # 2x because of skip
+  patch_size: [2, 2, 2]  # (level, lat, lon) patch size for the initial patch embedding
+  n_concatenated_states: 2 # prev and pred

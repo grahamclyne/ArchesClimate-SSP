@@ -1,0 +1,28 @@
+dataset:
+  _target_: ArchesClimate.dataloaders.cmip_random_lead_time.CMIPForecastLeadTime
+  path: ${cluster.data_path}${module.dataset_path}
+  # Only difference from cmip_random_lead_times.yaml: forcings_path points at
+  # the 64x128-regridded reference forcings (see
+  # preprocessing/regrid_reference_forcings_canesm5_native.py), not the
+  # shared 144x144 reference_data/ -- that dir's orography.pt is the wrong
+  # grid shape for this model. Hardcoded to /scratch rather than
+  # ${cluster.data_path} since the regridded copy only exists there, not
+  # under /local -- pass cluster=cleps (not cleps_local) with this dataloader.
+  forcings_path: /scratch/gclyne/reference_data_canesm5_native/
+  lead_times: ${module.lead_times}
+  load_prev: ${module.module.load_prev}
+  limit_examples: ${limit_examples}
+  norm_scheme: ${module.norm_scheme}
+  multistep: 1
+  surface_variables: ${module.surface_variables}
+  level_variables: ${module.level_variables}
+  pressure_levels: ${module.pressure_levels}
+  depth_levels: ${module.depth_levels}
+
+  train_filter: ${module.train_filter}
+  test_filter: ${module.test_filter}
+  val_filter: ${module.val_filter}
+  spatial_forcing_variables: ${module.spatial_forcing_variables}
+  non_spatial_forcing_variables: ${module.non_spatial_forcing_variables}
+  pf_n_steps: ${oc.select:module.module.pf_n_steps,8}
+  skip_pf: ${oc.select:module.skip_pf,false}

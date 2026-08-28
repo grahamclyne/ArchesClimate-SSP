@@ -1,0 +1,71 @@
+documentation:
+  title: Download and regrid CMIP6 variables into one NetCDF
+  description: Download variables from IPSL-CM6A-LR, regrid to same grid, and combine output
+  authors:
+    - butchart_neal
+
+datasets:
+
+  # DAMIP single-forcing historical run: GHG-only forcing (CO2, CH4, N2O,
+  # other well-mixed GHGs), all other forcings (aerosols, ozone, solar,
+  # land-use, volcanic) held at their pre-industrial/piControl levels.
+  # Not part of the CMIP activity like historical/abrupt-4xCO2 -- must set
+  # activity: DAMIP or ESGF search won't find it.
+  # Verified against ESGF (esgf-node.llnl.gov/esg-search): IPSL-CM6A-LR
+  # contributes 10 realizations (r1i1p1f1..r10i1p1f1), each 1850-01 to
+  # 2020-12, with tas/psl/pr/uas/vas/ps/thetao/hfss/hfls/huss/rlds/rsds/
+  # rsus/rlus/evspsbl/hus/ta/ua/va/zg all present.
+  # IPSL splits grid_label by realm here (same as historical/abrupt-4xCO2):
+  # atmosphere variables (tas, ta, ...) are 'gr', but thetao (ocean, Omon) is
+  # 'gn' -- confirmed via esgf-data.dkrz.de/esg-search. No single grid value
+  # satisfies both, so use the wildcard (matches abrupt4x.yml's pattern).
+  - project: CMIP6
+    activity: DAMIP
+    dataset: IPSL-CM6A-LR
+    exp: hist-GHG
+    ensemble: r(1:10)i1p1f1
+    grid: '*'
+    start_year: 1850
+    end_year: 2014
+
+preprocessors:
+  process_var:
+    regrid:
+      target_grid: "2.5x1.25"   # native grid of IPSL-CM6A-LR; or choose '2.5x2.5' etc.
+      scheme: area_weighted
+diagnostics:
+  regrid_and_combine:
+    variables:
+      #surface
+      tas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      psl:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      pr:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      uas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      vas:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      ps:      {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #ocean
+      thetao:    {mip: Omon, frequency: mon, preprocessor: process_var}
+
+      # #fluxes
+      hfss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      hfls:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      huss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      evspsbl: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      # #atmospheric
+      hus: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ta: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ua: {mip: Amon, frequency: mon, preprocessor: process_var}
+      va: {mip: Amon, frequency: mon, preprocessor: process_var}
+      zg: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+    scripts:
+      my_diagnostic:
+        script: /lustre/fswork/projects/rech/mlr/udy16au/ArchesClimate/ArchesClimate/preprocessing/prepare_interpol_dataset.py
+
+# to run:  esmvaltool run interpolation_dataset_hist-GHG.yml --search_esgf=when_missing

@@ -1,0 +1,44 @@
+# Example config for analysis/compare_runs.py
+# To run: python -m analysis.compare_runs --config analysis/configs/compare_runs_example.yaml
+# config_module: which hydra module config to compose, purely to get the
+# training-set normalization stats (data_mean/data_std) and the
+# surface_variables ordering used to denormalize the rollouts. Any config
+# from the same model family as the runs below works -- it does not need to
+# be the exact config each run was trained with, as long as they share
+# normalization stats and variable ordering.
+config_module: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad
+
+variable: tas
+
+target:
+  scenario: ssp434 # matches r{realization}_{scenario}_interpolation.memmap
+  realization: r1i1p1f1
+
+# Optional. Omit this whole block entirely for scenarios without a MESMER-M
+# emulation on disk (currently only ssp434 and ssp534-over have one).
+mesmer:
+  path: /scratch/gclyne/tutorials/emulations_434_all.nc
+
+runs:
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_dp030_ap040_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.30 ap=0.40"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_dp030_ap060_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.30 ap=0.60"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_dp030_ap080_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.30 ap=0.80"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_s-ba7fc4f2_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.20 ap=0.80"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.20 ap=0.60"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_s-ecf31009_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.20 ap=0.40"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_s-52cce8f2_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.10 ap=0.80"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_s-2082ab0c_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.10 ap=0.60"
+  - name: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_s-f2c62d96_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    label: "dp=0.10 ap=0.40"
+# Window length (years) used for the decade-averaged RMSE.
+decade_years: 10
+
+output_dir: analysis/outputs/compare_runs

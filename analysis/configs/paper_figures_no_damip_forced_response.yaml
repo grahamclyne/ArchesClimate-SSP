@@ -1,0 +1,19 @@
+# Forcing-ablation forced-response plot for the no-DAMIP model
+# (module=deterministic_damip_pf4_energy_score_w050_no_damip,
+# ckpt step-step=022000.ckpt), SSP4-3.4 (val) -- single-forcing piControl-held
+# ablations (methane/carbon/nitrous/aerosol/ozone), 5-member ensemble each,
+# with a Myhre-1998-ERF x TCR physical reference row below for the GHGs.
+config_module: deterministic_damip_pf4_energy_score_w050_no_damip
+
+forced_response:
+  start_year: 2015
+  domain: val
+  ablation_set: ipsl
+  physical_reference: true
+  legend_between_rows: true
+  legend_ncol: 3
+  legend_fontsize: 9
+  models:
+    no_damip: deterministic_damip_pf4_energy_score_w050_no_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_no_damip_forced_response

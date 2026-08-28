@@ -1,0 +1,66 @@
+documentation:
+  title: Diagnostic-only -- linear-scheme regrid comparison for ssp534-over
+  description: >
+    One-off comparison run against interpolation_dataset_canesm5_ssp534-over.yml,
+    identical except scheme: linear instead of area_weighted. Used to test
+    whether the persistent small cold blobs near the pole (rows 0-4, ~cols
+    70-115 of the area_weighted output) are a regridder artifact (they'd move
+    or vanish here) or a genuine defect in the raw CanESM5 source data
+    (they'd reappear at the same cells). Not part of the production
+    pipeline -- writes to $SCRATCH/interpolation_canesm5_datasets_lineartest
+    via CANESM5_INTERPOLATION_OUT_DIR, not the real interpolation_canesm5_datasets.
+  authors:
+    - butchart_neal
+
+datasets:
+
+  - project: CMIP6
+    dataset: CanESM5
+    exp: ssp534-over
+    ensemble: r1i1p1f1
+    grid: 'gn'
+    start_year: 2040
+    end_year: 2100
+
+preprocessors:
+  process_var:
+    regrid:
+      target_grid: "2.8125x2.8125"
+      scheme: linear
+diagnostics:
+  regrid_and_combine:
+    variables:
+      #surface
+      tas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      psl:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      pr:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      uas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      vas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      ps:      {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #ocean
+      thetao:  {mip: Omon, frequency: mon, preprocessor: process_var}
+
+      #fluxes
+      hfss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      hfls:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      huss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      evspsbl: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #atmospheric
+      hus: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ta:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      ua:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      va:  {mip: Amon, frequency: mon, preprocessor: process_var}
+      zg:  {mip: Amon, frequency: mon, preprocessor: process_var}
+
+    scripts:
+      my_diagnostic:
+        script: /home/gclyne/ArchesClimate/ArchesClimate/preprocessing/prepare_interpol_dataset_canesm5.py
+
+# to run:  CANESM5_INTERPOLATION_OUT_DIR=$SCRATCH/interpolation_canesm5_datasets_lineartest \
+#          esmvaltool run interpolation_dataset_canesm5_ssp534-over_lineartest.yml --search_esgf=when_missing

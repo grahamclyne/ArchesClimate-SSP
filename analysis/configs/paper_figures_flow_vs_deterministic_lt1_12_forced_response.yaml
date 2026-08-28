@@ -1,0 +1,16 @@
+# Side-by-side forced-response comparison: flow_damip_pf8_lt1_12 vs.
+# deterministic_damip_pf8_fixed, same ablation set (No CO2/methane/N2O,
+# No aerosol, No ozone, all "_pi" i.e. held at piControl concentration),
+# same TCR physical reference. One subplot per model, shared legend --
+# see paper_figures_forced_response.py's module docstring.
+config_module: deterministic_damip_pf8
+
+forced_response:
+  start_year: 2015
+  clamp_suffix: "_clamp3std10"
+  physical_reference: true
+  models:
+    flow_damip_pf8_lt1_12: flow_damip_pf8_lt1_12_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+    deterministic_damip_pf8_fixed: deterministic_damip_pf8_fixed_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_flow_vs_deterministic_lt1_12

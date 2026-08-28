@@ -1,0 +1,24 @@
+# Forcing-ablation forced-response plot for canesm5_damip_pf4_energy_score_w050
+# (module=canesm5_damip_pf4_energy_score_w050, ckpt step-step=022000.ckpt),
+# SSP5-3.4-over (val3) -- piControl-held single-forcing ablations
+# (no_co2/no_methane/no_n2o/no_ozone; no aerosol channel exists in this
+# native-grid CanESM5 model, see
+# configs/module/canesm5_damip_pf4_energy_score_w050.yaml's
+# spatial_forcing_variables) at inference.zero_forcing_source=pi.
+config_module: canesm5_damip_pf4_energy_score_w050
+dataloader: cmip_random_lead_times_canesm5_native
+
+forced_response:
+  start_year: 2040
+  domain: val3
+  ablation_set: canesm5
+  physical_reference: true  # load_physical_ghg_yearly's "64 vs 144 grid
+  # mismatch" was actually this config missing a top-level `dataloader:` key
+  # -- paper_figures_forced_response.py defaults to the IPSL dataloader
+  # (cmip_random_lead_times) when unset, so it was building CanESM5's
+  # 64-wide spatial_forcings next to IPSL's 144-wide orography. Fixed by
+  # adding dataloader: cmip_random_lead_times_canesm5_native above.
+  models:
+    canesm5_pf4_energy_score_w050_534: canesm5_damip_pf4_energy_score_w050_0_12_10_1_730_1_val3_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_canesm5_pf4_energy_score_w050_534_forced_response

@@ -1,0 +1,66 @@
+# SSP5-8.5 counterpart to tab:architecture_ablations, using the 5-seed
+# (inference.num_seeds=5) ssp585 (target=test, debug=True, surface-only)
+# rollouts submitted for the full pf/ap ablation family: pf2/pf4/pf8
+# (energy-score, step-022000), ap000/020/040 (step-022000), ap060-default
+# (step-038000), ap080/ap100 (step-040000). Unlike the pre-existing single-
+# member 585 rows in paper_figures_table_pf_ablations.yaml, these are true
+# 5-member ensembles, so CRPS/spread populate here. Black-carbon clamp
+# (clamp3std10) applied to all. No MESMER-M emulation exists for ssp585
+# (unseen forcing pathway).
+config_module: deterministic_damip_pf8
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp585
+    models:
+      pf2:
+        label: "$AC_{pf2}$ (energy-score)"
+        runs:
+          - deterministic_damip_pf2_energy_score_w050_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      pf4:
+        label: "$AC_{pf4}$ (energy-score)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      pf8:
+        label: "$AC_{pf8}$ (default, energy-score)"
+        runs:
+          - deterministic_damip_pf8_energy_score_w050_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap000:
+        label: "$AC_{p_{all}=0.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap000_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap020:
+        label: "$AC_{p_{all}=0.2}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap020_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap040:
+        label: "$AC_{p_{all}=0.4}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_ap040_12_10_1_1020_1_test_0_step-step=022000.ckpt_ema_clamp3std10
+      ap060:
+        label: "$AC_{p_{all}=0.6}$ (default)"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_test_0_step-step=038000.ckpt_ema_clamp3std10
+      ap080:
+        label: "$AC_{p_{all}=0.8}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema_clamp3std10
+      ap100:
+        label: "$AC_{p_{all}=1.0}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_100_20_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema_clamp3std10
+
+output_name: paper_figures_pf_ap_ablations_585

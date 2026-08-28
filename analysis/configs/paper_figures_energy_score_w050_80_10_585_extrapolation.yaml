@@ -1,0 +1,38 @@
+# SSP5-8.5 extrapolation figure (paper_figures_585_analysis.py) for the
+# energy-score w050_80_10 IPSL deterministic model
+# (module=deterministic_damip_pf4_energy_score_w050_80_10), checkpoint
+# step-step=040000.ckpt. Predicted ensemble is a real 5-seed rollout
+# (deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_test_0_
+# step-step=040000.ckpt_ema, seeds 0-4 confirmed on disk) vs. the IPSL
+# target's own multi-realization ensemble (r1i1p1f1-r4i1p1f1, the 4 ssp585
+# realizations available under /scratch/gclyne/memmap_filled_in/ -- r5 does
+# not exist), both plotted as mean +/- std filled bands by
+# paper_figures_585_analysis.py's plot_ranges. (Earlier version of this
+# config pointed at a directory with only 1 seed despite claiming 4 --
+# fixed 2026-08-12.)
+config_module: deterministic_damip_pf4_energy_score_w050_80_10
+
+variable: tas
+final_decade_years: 10
+
+# 2081: first year the SSP5-8.5 target's spatial-mean CO2 concentration
+# exceeds SSP3-7.0's own maximum (867 ppm at 2100, its final/highest-CO2
+# year -- SSP3-7.0's CO2 trajectory rises monotonically through 2100, no
+# interior peak) -- i.e. where SSP5-8.5 first pushes past the highest CO2
+# level seen anywhere in training. Computed directly from
+# r1i1p1f1_ssp370/ssp585_interpolation.memmap's spatial_forcings[1] (carbon).
+branch_year: 2081
+
+scenarios:
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realizations: [r1i1p1f1, r2i1p1f1, r3i1p1f1, r4i1p1f1]
+      scenario: ssp585
+    models:
+      full:
+        label: "AC-SSP"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_test_0_step-step=040000.ckpt_ema
+
+output_name: paper_figures_energy_score_w050_80_10_585_extrapolation

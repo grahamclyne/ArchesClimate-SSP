@@ -1,0 +1,46 @@
+# MESMER-M comparison table (SSP4-3.4 + SSP5-3.4-over) and physical-
+# consistency figures (hydrostatic balance, energy budget) for
+# deterministic_damip_pf4_energy_score_w050_80_10, step-040000, EMA.
+#
+# val (434): 20-member noise-seeded ensemble, save_all_vars=True.
+# val3 (534): 5-member noise-seeded ensemble, save_all_vars=True.
+config_module: deterministic_damip_pf4_energy_score_w050_80_10
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_434_all.nc
+    models:
+      full:
+        label: "AC-SSP"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_val_0_step-step=040000.ckpt_ema
+
+  - key: "534"
+    label: "SSP5-3.4-over"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp534-over
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_534_all.nc
+    models:
+      full:
+        label: "AC-SSP"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_80_10_0_12_10_1_1020_1_val3_0_step-step=040000.ckpt_ema
+
+output_name: paper_figures_pf4_w050_80_10_step40000_mesmer_physical

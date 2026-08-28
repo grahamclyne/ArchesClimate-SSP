@@ -1,0 +1,116 @@
+documentation:
+  title: Download and regrid CMIP6 variables into one NetCDF
+  description: Download variables from IPSL-CM6A-LR, regrid to same grid, and combine output
+  authors:
+    - butchart_neal
+
+datasets:
+
+#NEED TO SPLIT THESE UP OTHERWISE IT WILL TAKE TOO LONG
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: historical
+  #   # ensemble: r1i1p1f1
+  #   ensemble: r(1:10)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 1850
+  #   end_year: 2014
+
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: piControl
+  #   # ensemble: r1i1p1f1
+  #   ensemble: r(1:2)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 1850
+  #   end_year: 2100
+  
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: ssp126
+  #   ensemble: r(1:4)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 2015
+  #   end_year: 2100
+
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: ssp245
+  #   ensemble: r(1:6)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 2015
+  #   end_year: 2100
+
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: ssp370
+  #   ensemble: r(1:6)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 2015
+  #   end_year: 2100
+    
+  # - project: CMIP6
+  #   dataset: IPSL-CM6A-LR
+  #   exp: ssp585
+  #   ensemble: r(1:4)i1p1f1
+  #   grid: '*'        # native grid (will regrid to this)
+  #   start_year: 2015
+  #   end_year: 2100
+
+  - project: CMIP6
+    activity: CFMIP
+    dataset: IPSL-CM6A-LR
+    exp: abrupt-2xCO2
+    ensemble: r1i1p1f1
+    grid: '*'        # native grid (will regrid to this)
+    start_year: 1850
+    end_year: 1999
+       
+preprocessors:
+  process_var:
+    regrid:
+      target_grid: "2.5x1.25"   # native grid of IPSL-CM6A-LR; or choose '2.5x2.5' etc.
+      scheme: area_weighted
+diagnostics:
+  regrid_and_combine:
+    variables:
+      #surface
+      tas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      psl:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      pr:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      uas:     {mip: Amon, frequency: mon, preprocessor: process_var}
+      vas:      {mip: Amon, frequency: mon, preprocessor: process_var}
+      ps:      {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      #ocean
+      # thetaot2000:    {mip: Emon, frequency: mon, preprocessor: process_var}
+      # thetaot700:    {mip: Emon, frequency: mon, preprocessor: process_var}
+      # thetaot300:    {mip: Emon, frequency: mon, preprocessor: process_var}
+      # t20d:    {mip: Emon, frequency: mon, preprocessor: process_var}
+      # tob: {mip: Omon, frequency: mon, preprocessor: process_var}
+      # tos: {mip: Omon, frequency: mon, preprocessor: process_var}
+      thetao:    {mip: Omon, frequency: mon, preprocessor: process_var}
+
+
+      # #fluxes
+      hfss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      hfls:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      huss:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsds:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rsus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      rlus:    {mip: Amon, frequency: mon, preprocessor: process_var}
+      evspsbl: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+      # #atmospheric
+      hus: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ta: {mip: Amon, frequency: mon, preprocessor: process_var}
+      ua: {mip: Amon, frequency: mon, preprocessor: process_var}
+      va: {mip: Amon, frequency: mon, preprocessor: process_var}
+      zg: {mip: Amon, frequency: mon, preprocessor: process_var}
+
+    scripts:
+      my_diagnostic:
+        script: /home/gclyne/ArchesClimate/ArchesClimate/preprocessing/prepare_interpol_dataset.py
+
+# to run:  esmvaltool run second_recipe.yml --search_esgf=when_missing

@@ -1,0 +1,57 @@
+# CanESM5 application (sec:canesm5_application): global-mean tas rollout vs
+# CanESM5-native target, one panel each for ssp434 (val), ssp534-over (val3),
+# ssp585 (test), using the canesm5_damip_fixed flow model
+# (flow_canesm5_damip_fixed, step-030000, EMA, black-carbon-clamp N/A --
+# CanESM5 has no aerosol forcing). Run with:
+#   python -m analysis.paper_figures_ap_global_mean \
+#       --config analysis/configs/paper_figures_table_canesm5_global_mean.yaml \
+#       --scenario 434,534,585
+config_module: flow_canesm5_damip_fixed
+dataloader: cmip_random_lead_times_canesm5_native
+
+variable: tas
+target_label: CanESM5
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    models:
+      canesm5_det:
+        label: "Deterministic"
+        runs:
+          - canesm5_damip_fixed_12_10_1_1020_1_val_0_None_ema
+      canesm5:
+        label: "Flow"
+        runs:
+          - flow_canesm5_damip_fixed_proper_params_v2_12_10_1_1020_1_val_0_step-step=030000.ckpt_ema_clamp3std10
+
+  - key: "534"
+    label: "SSP5-3.4-over"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp534-over
+    models:
+      canesm5:
+        label: "ArchesClimate-SSP"
+        runs:
+          - flow_canesm5_damip_fixed_proper_params_v2_12_10_1_1020_1_val3_0_step-step=030000.ckpt_ema_clamp3std10
+
+  - key: "585"
+    label: "SSP5-8.5"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp585
+    models:
+      canesm5_det:
+        label: "Deterministic"
+        runs:
+          - canesm5_damip_fixed_12_10_1_1020_1_test_0_None_ema
+      canesm5:
+        label: "Flow"
+        runs:
+          - flow_canesm5_damip_fixed_proper_params_v2_12_10_1_1020_1_test_0_step-step=030000.ckpt_ema_clamp3std10
+
+output_name: paper_figures_canesm5_application

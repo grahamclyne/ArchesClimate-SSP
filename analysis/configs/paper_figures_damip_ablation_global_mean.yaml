@@ -1,0 +1,25 @@
+# Companion global-mean tas rollout plot for the DAMIP ablation table
+# (paper_figures_table_damip_ablation.yaml) -- same two models, SSP4-3.4.
+config_module: deterministic_damip_pf4_energy_score_w050
+dataloader: cmip_random_lead_times
+
+variable: tas
+target_label: "IPSL target"
+
+scenarios:
+  - key: "434"
+    label: "SSP4-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp434
+    models:
+      damip:
+        label: "$AC_{+DAMIP}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_0_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+      no_damip:
+        label: "$AC_{\\neg DAMIP}$"
+        runs:
+          - deterministic_damip_pf4_energy_score_w050_no_damip_12_10_1_1020_1_val_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_damip_ablation_global_mean

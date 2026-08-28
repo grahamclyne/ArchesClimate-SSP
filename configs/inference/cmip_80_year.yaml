@@ -1,0 +1,57 @@
+cf_guidance: 1
+s_churn: 0.0
+# Must be True for s_churn (and s_tmin/s_tmax/s_noise) to have any effect at
+# all -- FlowMatchEulerDiscreteScheduler.step() takes a purely deterministic
+# ODE branch when this is False, silently ignoring s_churn. False preserves
+# exact prior behaviour.
+stochastic_sampling: False
+scale_input_noise: 1
+num_inference_steps: 12
+num_batch_examples: 1
+num_members: 10
+num_rollout_steps: 1020
+target: val
+year: 0
+start_member: 0
+end_member: 1
+flat_forcings: False
+ckpt_fname: !!null
+use_ema: True
+add_stochastic_noise: False
+num_seeds: 1
+seed_index: !!null  # set to 0..num_seeds-1 to run a single seed per job
+debug: True
+zero_spatial_forcing_indices: []
+zero_non_spatial_forcing_indices: []
+# "null" (default): zeroed channels get the learned "channel absent" token
+# (null_spatial_map / zero). "pi": zeroed channels get the piControl
+# experiment's own normalized forcing values instead -- a physical "held at
+# pre-industrial level" counterfactual. See model/forecast.py:load_pi_forcing_values.
+zero_forcing_source: "null"
+# Clip spatial_forcings[:, clamp_spatial_forcing_indices] to
+# +/- clamp_spatial_forcing_std standard deviations each rollout step
+# (forcings are z-score normalized, so this is std devs of the normalized
+# value, not physical units). Unlike zero_spatial_forcing_indices, this caps
+# outlier spikes rather than removing the channel's signal entirely.
+# Index 3 is the black-carbon (AIBCM) channel in every
+# deterministic_damip_pf8*/pf{2,4,16,32} spatial_forcing_variables layout
+# (see preprocessing/common/forcings.py's AEROSOL_VARS mislabeling note),
+# which contains a ~25 std single-pixel spike under SSP4-3.4. Clamping it
+# was originally the standard default here, but follow-up testing found the
+# spike is not actually a problem for the deterministic/energy-score model
+# family -- only the flow-matching model showed the instability this was
+# meant to fix (see paper appendix app:bc_anomaly, to be reframed as a
+# flow-model-specific issue). Defaulted OFF as of this change; pass
+# inference.clamp_spatial_forcing_indices=[3] inference.clamp_spatial_forcing_std=10
+# explicitly (e.g. for flow-model rollouts) to turn it back on -- both keys
+# already exist in this config, so no "+" prefix is needed on the override.
+# Existing rollouts generated under the old default are NOT being
+# regenerated -- check a run's own out_dir suffix (_clamp3std10 present or
+# absent) to know which behavior it used.
+clamp_spatial_forcing_indices: []
+clamp_spatial_forcing_std: !!null
+save_all_vars: False
+# "auto" (default): cuda if available, else cpu (see model/base_module.py's
+# load_module). Pass inference.device=cpu explicitly to force CPU even on a
+# CUDA-capable machine, e.g. to leave the GPU free for something else.
+device: auto

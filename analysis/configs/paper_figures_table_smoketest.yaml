@@ -1,0 +1,40 @@
+# Smoke-test config for analysis/paper_figures_table.py against real,
+# currently-available rollout data (the spade/concat/adaln1d backbone
+# ablations, val3 = ssp534-over). Not a real paper config -- these ablation
+# checkpoints stand in as multiple comparison models purely to exercise the
+# multi-model table end-to-end.
+config_module: forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_concat
+
+variable: tas
+final_decade_years: 10
+
+climatology:
+  realization: r1i1p1f1
+  field: lev
+  var_idx: 0
+  n_clim_years: 20
+  skip_last_years: 10
+
+scenarios:
+  - key: "534"
+    label: "SSP5-3.4"
+    target:
+      realization: r1i1p1f1
+      scenario: ssp534-over
+    mesmer:
+      path: /scratch/gclyne/tutorials/emulations_534_all.nc
+    models:
+      spade:
+        label: "$AC_{spade}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_spade_12_10_1_1020_1_val3_0_step-step=022000.ckpt_ema
+      concat:
+        label: "$AC_{concat}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_concat_12_10_1_1020_1_val3_0_step-step=022000.ckpt_ema
+      adaln1d:
+        label: "$AC_{adaln1d}$"
+        runs:
+          - forcing_dropout_no_random_lt_pf8_no_uncond_grouped_dropout_pilot_full_state_circular_pad_ablation_adaln1d_12_10_1_1020_1_val3_0_step-step=022000.ckpt_ema
+
+output_name: paper_figures_smoketest
